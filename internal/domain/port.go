@@ -1,0 +1,61 @@
+package domain
+
+type Port struct {
+	ID       int64
+	LogID    int64
+	NodeGUID string
+	PortGUID string
+	PortNum  int
+
+	MKey                                string
+	GIDPrfx                             string
+	MSMLID                              int
+	LID                                 int
+	CapMsk                              int64
+	MKeyLeasePeriod                     int
+	DiagCode                            int
+	LinkWidthActv                       int
+	LinkWidthSup                        int
+	LinkWidthEn                         int
+	LocalPortNum                        int
+	LinkSpeedEn                         int
+	LinkSpeedActv                       int
+	LMC                                 int
+	MKeyProtBits                        int
+	LinkDownDefState                    int
+	PortPhyState                        int
+	PortState                           int
+	LinkSpeedSup                        int
+	VLArbHighCap                        int
+	VLHighLimit                         int
+	InitType                            int
+	VLCap                               int
+	MSMSL                               int
+	NMTU                                int
+	FilterRawOutb                       int
+	FilterRawInb                        int
+	PartEnfOutb                         int
+	PartEnfInb                          int
+	OpVLs                               int
+	HoQLife                             int
+	VLStallCnt                          int
+	MTUCap                              int
+	InitTypeReply                       int
+	VLArbLowCap                         int
+	PKeyViolations                      int
+	MKeyViolations                      int
+	SubnTmo                             int
+	MulticastPKeyTrapSuppressionEnabled int
+	ClientReregister                    int
+	GUIDCap                             int
+	QKeyViolations                      int
+	MaxCreditHint                       int
+	OverrunErrs                         int
+	LocalPhyError                       int
+	RespTimeValue                       int
+	LinkRoundTripLatency                int
+	OOOSLMask                           string
+	CapMsk2                             *int
+	FECActv                             *int
+	RetransActv                         *int
+}
