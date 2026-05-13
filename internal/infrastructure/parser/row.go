@@ -1,10 +1,13 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 )
+
+var errOptionalNA = errors.New("optional column value is N/A")
 
 type rowParser struct {
 	row []string
@@ -41,7 +44,16 @@ func (r *rowParser) readIntOpt(dst **int, col string) {
 	if r.err != nil {
 		return
 	}
-	*dst, r.err = optIntCol(r.row, r.idx, col)
+	v, err := optIntCol(r.row, r.idx, col)
+	if err != nil {
+		if errors.Is(err, errOptionalNA) {
+			*dst = nil
+			return
+		}
+		r.err = err
+		return
+	}
+	*dst = v
 }
 
 func intCol(row []string, idx map[string]int, col string) (int, error) {
@@ -78,7 +90,7 @@ func optIntCol(row []string, idx map[string]int, col string) (*int, error) {
 		return nil, err
 	}
 	if s == "N/A" {
-		return nil, nil
+		return nil, errOptionalNA
 	}
 	n, err := strconv.Atoi(s)
 	if err != nil {

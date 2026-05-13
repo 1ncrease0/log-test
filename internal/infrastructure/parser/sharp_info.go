@@ -9,6 +9,8 @@ import (
 	"log-parser/internal/domain"
 )
 
+const sharpKeyValueParts = 2
+
 func parseSharpInfo(data []byte) ([]domain.NodeSharpInfo, error) {
 	var result []domain.NodeSharpInfo
 	var current *domain.NodeSharpInfo
@@ -36,8 +38,8 @@ func parseSharpInfo(data []byte) ([]domain.NodeSharpInfo, error) {
 			continue
 		}
 
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
+		parts := strings.SplitN(line, "=", sharpKeyValueParts)
+		if len(parts) != sharpKeyValueParts {
 			return nil, fmt.Errorf("line %d: invalid key=value: %q", lineNum, line)
 		}
 		key := strings.TrimSpace(parts[0])

@@ -3,6 +3,7 @@ package parser
 import (
 	"bufio"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -19,7 +20,7 @@ type dbCSVResult struct {
 func parseDBCSV(data []byte) (dbCSVResult, error) {
 	sections, err := splitSections(data)
 	if err != nil {
-		return dbCSVResult{}, err
+		return dbCSVResult{}, fmt.Errorf("split sections: %w", err)
 	}
 
 	for _, name := range []string{"NODES", "PORTS"} {
@@ -65,6 +66,7 @@ func parseNodeRow(row []string, idx map[string]int) (domain.Node, error) {
 	return n, r.err
 }
 
+//nolint:funlen
 func parsePortRow(row []string, idx map[string]int) (domain.Port, error) {
 	var p domain.Port
 	r := newRowParser(row, idx)
@@ -167,14 +169,14 @@ func parseSystemInfoRow(row []string, idx map[string]int) (domain.NodeSystemInfo
 func parseCSVRows[T any](section string, parseRow func([]string, map[string]int) (T, error)) ([]T, error) {
 	header, rows, err := parseCSVSection(section)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse csv section: %w", err)
 	}
 	idx := colIdx(header)
 	out := make([]T, 0, len(rows))
 	for i, row := range rows {
-		item, err := parseRow(row, idx)
-		if err != nil {
-			return nil, fmt.Errorf("row %d: %w", i+1, err)
+		item, rowErr := parseRow(row, idx)
+		if rowErr != nil {
+			return nil, fmt.Errorf("row %d: %w", i+1, rowErr)
 		}
 		out = append(out, item)
 	}
@@ -205,7 +207,10 @@ func splitSections(data []byte) (map[string]string, error) {
 			}
 		}
 	}
-	return sections, scanner.Err()
+	if scanErr := scanner.Err(); scanErr != nil {
+		return sections, fmt.Errorf("scan db csv: %w", scanErr)
+	}
+	return sections, nil
 }
 
 func parseCSVSection(data string) ([]string, [][]string, error) {
@@ -216,7 +221,7 @@ func parseCSVSection(data string) ([]string, [][]string, error) {
 		return nil, nil, fmt.Errorf("csv: %w", err)
 	}
 	if len(all) < 1 {
-		return nil, nil, fmt.Errorf("csv: empty section")
+		return nil, nil, errors.New("csv: empty section")
 	}
 	return all[0], all[1:], nil
 }

@@ -36,21 +36,21 @@ func (p *Parser) Parse(archivePath string) (application.ParseResult, error) {
 
 	files, err := p.archives.ReadAll(archivePath)
 	if err != nil {
-		return zero, err
+		return zero, fmt.Errorf("read archive: %w", err)
 	}
 
 	dbCSVData, ok := files[fileDBCSV]
 	if !ok {
-		err := fmt.Errorf("archive missing required file: %s", fileDBCSV)
-		p.log.Error("parse aborted", "err", err)
-		return zero, err
+		missingDB := fmt.Errorf("archive missing required file: %s", fileDBCSV)
+		p.log.Error("parse aborted", "err", missingDB)
+		return zero, missingDB
 	}
 
 	sharpData, ok := files[fileSharpInfo]
 	if !ok {
-		err := fmt.Errorf("archive missing required file: %s", fileSharpInfo)
-		p.log.Error("parse aborted", "err", err)
-		return zero, err
+		missingSharp := fmt.Errorf("archive missing required file: %s", fileSharpInfo)
+		p.log.Error("parse aborted", "err", missingSharp)
+		return zero, missingSharp
 	}
 
 	csv, err := parseDBCSV(dbCSVData)

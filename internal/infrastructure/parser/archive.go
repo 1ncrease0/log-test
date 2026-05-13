@@ -43,12 +43,12 @@ func (z *ArchiveReader) ReadAll(archivePath string) (map[string][]byte, error) {
 		if f.FileInfo().IsDir() {
 			continue
 		}
-		data, err := z.readZipEntry(f)
-		if err != nil {
-			z.log.Error("read zip entry", "entry", f.Name, "err", err)
-			return nil, err
+		entryData, readErr := z.readZipEntry(f)
+		if readErr != nil {
+			z.log.Error("read zip entry", "entry", f.Name, "err", readErr)
+			return nil, fmt.Errorf("read entry %s: %w", f.Name, readErr)
 		}
-		result[filepath.Base(f.Name)] = data
+		result[filepath.Base(f.Name)] = entryData
 	}
 	return result, nil
 }
@@ -59,12 +59,12 @@ func (z *ArchiveReader) ResolveRelative(rel string) (string, error) {
 		return "", fmt.Errorf("%w: path escapes data directory", application.ErrInvalidPath)
 	}
 	full := filepath.Join("data", rel)
-	absArchive, err := filepath.Abs(full)
-	if err != nil {
-		return "", fmt.Errorf("resolve archive path: %w", err)
+	absArchive, absErr := filepath.Abs(full)
+	if absErr != nil {
+		return "", fmt.Errorf("resolve archive path: %w", absErr)
 	}
-	if err := z.validatePath(absArchive); err != nil {
-		return "", err
+	if valErr := z.validatePath(absArchive); valErr != nil {
+		return "", valErr
 	}
 	return absArchive, nil
 }

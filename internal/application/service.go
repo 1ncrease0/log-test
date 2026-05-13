@@ -24,15 +24,15 @@ func NewService(log *slog.Logger, store Store, parser Parser) Service {
 func (s *service) ProcessArchive(ctx context.Context, archiveRel string) (int64, error) {
 	path, err := s.parser.ResolveArchive(archiveRel)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("resolve archive: %w", err)
 	}
 
 	logID, err := s.store.CreateLog(ctx, path)
 	if err != nil {
 		if errors.Is(err, ErrDuplicateLogPath) {
-			return 0, err
+			return 0, fmt.Errorf("create log: %w", err)
 		}
-		return 0, fmt.Errorf("%w: %v", ErrPersistFailed, err)
+		return 0, fmt.Errorf("%w: %w", ErrPersistFailed, err)
 	}
 
 	parseStart := time.Now()
@@ -49,12 +49,12 @@ func (s *service) ProcessArchive(ctx context.Context, archiveRel string) (int64,
 
 	s.log.Info("parse complete", "log_id", logID, "parse_duration", parseDuration)
 
-	if err := s.store.SaveResult(ctx, logID, res); err != nil {
-		s.log.Error("archive persist failed", "log_id", logID, "error", err)
+	if saveErr := s.store.SaveResult(ctx, logID, res); saveErr != nil {
+		s.log.Error("archive persist failed", "log_id", logID, "error", saveErr)
 		if setErr := s.store.SetStatus(ctx, logID, domain.LogStatusFailed); setErr != nil {
 			s.log.Error("set status failed", "log_id", logID, "error", setErr)
 		}
-		return 0, fmt.Errorf("%w: %v", ErrPersistFailed, err)
+		return 0, fmt.Errorf("%w: %w", ErrPersistFailed, saveErr)
 	}
 
 	s.log.Info("archive processed",
@@ -69,7 +69,7 @@ func (s *service) ProcessArchive(ctx context.Context, archiveRel string) (int64,
 func (s *service) Topology(ctx context.Context, logID int64) (Topology, error) {
 	dlog, err := s.store.Log(ctx, logID)
 	if err != nil {
-		return Topology{}, err
+		return Topology{}, fmt.Errorf("log: %w", err)
 	}
 	if dlog.Status != domain.LogStatusDone {
 		return Topology{}, ErrTopologyNotReady
@@ -77,7 +77,7 @@ func (s *service) Topology(ctx context.Context, logID int64) (Topology, error) {
 
 	nodes, err := s.store.Nodes(ctx, logID)
 	if err != nil {
-		return Topology{}, err
+		return Topology{}, fmt.Errorf("nodes: %w", err)
 	}
 
 	buckets := make(map[int][]int64)
@@ -107,18 +107,18 @@ func (s *service) Topology(ctx context.Context, logID int64) (Topology, error) {
 func (s *service) NodeDetail(ctx context.Context, nodeID int64) (NodeDetail, error) {
 	d, err := s.store.NodeDetail(ctx, nodeID)
 	if err != nil {
-		return NodeDetail{}, err
+		return NodeDetail{}, fmt.Errorf("node detail: %w", err)
 	}
 	return d, nil
 }
 
 func (s *service) Ports(ctx context.Context, nodeID int64) ([]domain.Port, error) {
 	if _, err := s.store.Node(ctx, nodeID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("node: %w", err)
 	}
 	ports, err := s.store.Ports(ctx, nodeID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ports: %w", err)
 	}
 	return ports, nil
 }
@@ -126,7 +126,7 @@ func (s *service) Ports(ctx context.Context, nodeID int64) ([]domain.Port, error
 func (s *service) LogMeta(ctx context.Context, logID int64) (domain.Log, error) {
 	dlog, err := s.store.Log(ctx, logID)
 	if err != nil {
-		return domain.Log{}, err
+		return domain.Log{}, fmt.Errorf("log: %w", err)
 	}
 	return dlog, nil
 }

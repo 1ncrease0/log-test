@@ -24,7 +24,7 @@ func Logger(log *slog.Logger) func(http.Handler) http.Handler {
 
 			level := slog.LevelInfo
 
-			if wrapped.status >= 500 {
+			if wrapped.status >= http.StatusInternalServerError {
 				level = slog.LevelError
 			}
 

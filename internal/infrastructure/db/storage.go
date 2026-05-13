@@ -8,7 +8,6 @@ import (
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgconn"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 
 	"log-parser/internal/application"
@@ -24,13 +23,16 @@ func New(log *slog.Logger, address string) (*DB, error) {
 	db, err := sqlx.Connect("pgx", address)
 	if err != nil {
 		log.Error("connection problem", "address", address, "error", err)
-		return nil, err
+		return nil, fmt.Errorf("sqlx connect: %w", err)
 	}
 	return &DB{log: log, conn: db}, nil
 }
 
 func (db *DB) Close() error {
-	return db.conn.Close()
+	if err := db.conn.Close(); err != nil {
+		return fmt.Errorf("db close: %w", err)
+	}
+	return nil
 }
 
 func (db *DB) CreateLog(ctx context.Context, path string) (int64, error) {
@@ -72,31 +74,31 @@ func (db *DB) SaveResult(ctx context.Context, logID int64, result application.Pa
 	if err != nil {
 		return err
 	}
-	if err := insertPorts(ctx, tx, logID, guidToID, result.Ports); err != nil {
-		return err
+	if insErr := insertPorts(ctx, tx, logID, guidToID, result.Ports); insErr != nil {
+		return insErr
 	}
-	if err := insertSwitchInfos(ctx, tx, guidToID, result.SwitchInfos); err != nil {
-		return err
+	if insErr := insertSwitchInfos(ctx, tx, guidToID, result.SwitchInfos); insErr != nil {
+		return insErr
 	}
-	if err := insertSystemInfos(ctx, tx, guidToID, result.SystemInfos); err != nil {
-		return err
+	if insErr := insertSystemInfos(ctx, tx, guidToID, result.SystemInfos); insErr != nil {
+		return insErr
 	}
-	if err := insertSharpInfos(ctx, tx, guidToID, result.SharpInfos); err != nil {
-		return err
+	if insErr := insertSharpInfos(ctx, tx, guidToID, result.SharpInfos); insErr != nil {
+		return insErr
 	}
 
 	const upd = `UPDATE logs SET status = $1, node_count = $2, port_count = $3 WHERE id = $4`
-	if _, err := tx.ExecContext(ctx, upd,
+	if _, execErr := tx.ExecContext(ctx, upd,
 		string(domain.LogStatusDone),
 		len(result.Nodes),
 		len(result.Ports),
 		logID,
-	); err != nil {
-		return fmt.Errorf("update log: %w", err)
+	); execErr != nil {
+		return fmt.Errorf("update log: %w", execErr)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit: %w", err)
+	if commitErr := tx.Commit(); commitErr != nil {
+		return fmt.Errorf("commit: %w", commitErr)
 	}
 	return nil
 }
@@ -140,9 +142,9 @@ func (db *DB) NodeDetail(ctx context.Context, nodeID int64) (application.NodeDet
 	detail := application.NodeDetail{Node: node}
 
 	var sw nodeSwitchInfoRow
-	if err := db.conn.GetContext(ctx, &sw, `SELECT * FROM nodes_switch_info WHERE node_id = $1`, nodeID); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return application.NodeDetail{}, fmt.Errorf("nodes_switch_info node_id=%d: %w", nodeID, err)
+	if swErr := db.conn.GetContext(ctx, &sw, `SELECT * FROM nodes_switch_info WHERE node_id = $1`, nodeID); swErr != nil {
+		if !errors.Is(swErr, sql.ErrNoRows) {
+			return application.NodeDetail{}, fmt.Errorf("nodes_switch_info node_id=%d: %w", nodeID, swErr)
 		}
 	} else {
 		v := sw.toDomain()
@@ -150,9 +152,9 @@ func (db *DB) NodeDetail(ctx context.Context, nodeID int64) (application.NodeDet
 	}
 
 	var sys nodeSystemInfoRow
-	if err := db.conn.GetContext(ctx, &sys, `SELECT * FROM nodes_system_info WHERE node_id = $1`, nodeID); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return application.NodeDetail{}, fmt.Errorf("nodes_system_info node_id=%d: %w", nodeID, err)
+	if sysErr := db.conn.GetContext(ctx, &sys, `SELECT * FROM nodes_system_info WHERE node_id = $1`, nodeID); sysErr != nil {
+		if !errors.Is(sysErr, sql.ErrNoRows) {
+			return application.NodeDetail{}, fmt.Errorf("nodes_system_info node_id=%d: %w", nodeID, sysErr)
 		}
 	} else {
 		v := sys.toDomain()
@@ -160,9 +162,9 @@ func (db *DB) NodeDetail(ctx context.Context, nodeID int64) (application.NodeDet
 	}
 
 	var sharp nodeSharpInfoRow
-	if err := db.conn.GetContext(ctx, &sharp, `SELECT * FROM nodes_sharp_info WHERE node_id = $1`, nodeID); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return application.NodeDetail{}, fmt.Errorf("nodes_sharp_info node_id=%d: %w", nodeID, err)
+	if sharpErr := db.conn.GetContext(ctx, &sharp, `SELECT * FROM nodes_sharp_info WHERE node_id = $1`, nodeID); sharpErr != nil {
+		if !errors.Is(sharpErr, sql.ErrNoRows) {
+			return application.NodeDetail{}, fmt.Errorf("nodes_sharp_info node_id=%d: %w", nodeID, sharpErr)
 		}
 	} else {
 		v := sharp.toDomain()

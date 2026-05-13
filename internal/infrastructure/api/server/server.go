@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -68,7 +69,7 @@ func (s *Server) Shutdown() error {
 
 	if err := s.server.Shutdown(ctx); err != nil {
 		s.log.Error("http server shutdown error", slog.String("err", err.Error()))
-		return err
+		return fmt.Errorf("http server shutdown: %w", err)
 	}
 
 	s.log.Info("http server stopped gracefully")

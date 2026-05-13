@@ -35,13 +35,13 @@ func run(cfg config.Config, log *slog.Logger) error {
 		return fmt.Errorf("db connect: %w", err)
 	}
 	defer func() {
-		if err := store.Close(); err != nil {
-			log.Warn("db close", "error", err)
+		if closeErr := store.Close(); closeErr != nil {
+			log.Warn("db close", "error", closeErr)
 		}
 	}()
 
-	if err := store.Migrate(); err != nil {
-		return fmt.Errorf("migrations: %w", err)
+	if migrateErr := store.Migrate(); migrateErr != nil {
+		return fmt.Errorf("migrations: %w", migrateErr)
 	}
 
 	svc := application.NewService(log, store, parser.New(log))
@@ -55,16 +55,16 @@ func run(cfg config.Config, log *slog.Logger) error {
 
 	var runErr error
 	select {
-	case err := <-srv.Notify():
-		if err != nil {
-			runErr = fmt.Errorf("http server: %w", err)
+	case srvErr := <-srv.Notify():
+		if srvErr != nil {
+			runErr = fmt.Errorf("http server: %w", srvErr)
 		}
 	case <-ctx.Done():
 		log.Info("shutdown signal")
 	}
 
-	if err := srv.Shutdown(); err != nil {
-		return errors.Join(runErr, fmt.Errorf("shutdown: %w", err))
+	if shutdownErr := srv.Shutdown(); shutdownErr != nil {
+		return errors.Join(runErr, fmt.Errorf("shutdown: %w", shutdownErr))
 	}
 	return runErr
 }
