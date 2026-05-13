@@ -1,0 +1,201 @@
+{
+  "info": {
+    "_postman_id": "a3e96da1-f53b-47fc-abbc-b0d3789f3ca1",
+    "name": "Log parser API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "archive_path", "value": "log.zip" },
+    { "key": "log_id", "value": "1" },
+    { "key": "node_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Parse",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201 Created', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test('JSON содержит log_id', function () {",
+              "    const j = pm.response.json();",
+              "    pm.expect(j).to.have.property('log_id');",
+              "    pm.expect(j.log_id).to.be.a('number');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"path\": \"{{archive_path}}\"\n}" },
+        "url": "{{baseUrl}}/api/v1/parse/"
+      },
+      "response": []
+    },
+    {
+      "name": "Parse conflict",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 409 Conflict (дубликат пути в БД)', function () {",
+              "    pm.response.to.have.status(409);",
+              "});",
+              "pm.test('JSON содержит error', function () {",
+              "    pm.expect(pm.response.json()).to.have.property('error');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"path\": \"{{archive_path}}\"\n}" },
+        "url": "{{baseUrl}}/api/v1/parse/"
+      },
+      "response": []
+    },
+    {
+      "name": "Parse empty path",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400 (пустой path)', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "pm.test('JSON содержит error', function () {",
+              "    pm.expect(pm.response.json()).to.have.property('error');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"path\": \"\"\n}" },
+        "url": "{{baseUrl}}/api/v1/parse/"
+      },
+      "response": []
+    },
+    {
+      "name": "Topology",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200 (лог в статусе done)', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('есть nodes и groups', function () {",
+              "    const j = pm.response.json();",
+              "    pm.expect(j).to.have.property('nodes');",
+              "    pm.expect(j).to.have.property('groups');",
+              "    pm.expect(j.nodes).to.be.an('array');",
+              "    pm.expect(j.groups).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/topology/{{log_id}}"
+      },
+      "response": []
+    },
+    {
+      "name": "Node",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('поля узла', function () {",
+              "    const j = pm.response.json();",
+              "    pm.expect(j).to.include.keys('id', 'log_id', 'node_guid', 'node_type');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/node/{{node_id}}"
+      },
+      "response": []
+    },
+    {
+      "name": "Port",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('ответ — массив портов', function () {",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/port/{{node_id}}"
+      },
+      "response": []
+    },
+    {
+      "name": "Log",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('мета лога (ТЗ F-5)', function () {",
+              "    const j = pm.response.json();",
+              "    pm.expect(j).to.include.keys('status', 'node_count', 'port_count', 'uploaded_at');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/log/{{log_id}}"
+      },
+      "response": []
+    }
+  ]
+}

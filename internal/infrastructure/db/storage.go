@@ -104,6 +104,9 @@ func (db *DB) SaveResult(ctx context.Context, logID int64, result application.Pa
 func (db *DB) Log(ctx context.Context, id int64) (domain.Log, error) {
 	var row logRow
 	if err := db.conn.GetContext(ctx, &row, `SELECT * FROM logs WHERE id = $1`, id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Log{}, application.ErrNotFound
+		}
 		return domain.Log{}, fmt.Errorf("log %d: %w", id, err)
 	}
 	return row.toDomain(), nil
@@ -120,6 +123,9 @@ func (db *DB) Nodes(ctx context.Context, logID int64) ([]domain.Node, error) {
 func (db *DB) Node(ctx context.Context, nodeID int64) (domain.Node, error) {
 	var row nodeRow
 	if err := db.conn.GetContext(ctx, &row, `SELECT * FROM nodes WHERE id = $1`, nodeID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Node{}, application.ErrNotFound
+		}
 		return domain.Node{}, fmt.Errorf("node %d: %w", nodeID, err)
 	}
 	return row.toDomain(), nil

@@ -4,11 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"log-parser/internal/application"
 	"log-parser/internal/config"
-	"log-parser/internal/domain"
+	"log-parser/internal/infrastructure/api"
+	"log-parser/internal/infrastructure/api/server"
 	"log-parser/internal/infrastructure/db"
 	"log-parser/internal/infrastructure/parser"
 	"log-parser/pkg/logger"
@@ -17,19 +21,18 @@ import (
 func main() {
 	cfg := config.MustLoad()
 	log := logger.New(cfg.LogLevel)
-	log.Debug("debug messages enabled")
-
-	path := "data/log.zip"
-	if len(os.Args) > 1 {
-		path = os.Args[1]
+	if err := run(cfg, log); err != nil {
+		log.Error("run", "error", err)
+		os.Exit(1)
 	}
+}
 
-	ctx := context.Background()
+func run(cfg config.Config, log *slog.Logger) error {
+	log.Debug("debug messages enabled")
 
 	store, err := db.New(log, cfg.DBAddress)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "db connect: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("db connect: %w", err)
 	}
 	defer func() {
 		if err := store.Close(); err != nil {
@@ -38,47 +41,30 @@ func main() {
 	}()
 
 	if err := store.Migrate(); err != nil {
-		fmt.Fprintf(os.Stderr, "migrations: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("migrations: %w", err)
 	}
-	log.Info("migrations applied")
 
-	logID, err := store.CreateLog(ctx, path)
-	if err != nil {
-		if errors.Is(err, application.ErrDuplicateLogPath) {
-			fmt.Fprintf(os.Stderr, "duplicate log path (already in database): %s\n", path)
-			os.Exit(2)
+	svc := application.NewService(log, store, parser.New(log))
+	mux := api.Routes(log, svc)
+	srv := server.New(log, mux, server.WithAddress(":"+cfg.HTTPConfig.Port))
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	srv.Start()
+
+	var runErr error
+	select {
+	case err := <-srv.Notify():
+		if err != nil {
+			runErr = fmt.Errorf("http server: %w", err)
 		}
-		fmt.Fprintf(os.Stderr, "create log: %v\n", err)
-		os.Exit(1)
-	}
-	log.Info("log record created", "log_id", logID, "path", path)
-
-	p := parser.New(log)
-	res, err := p.Parse(path)
-	if err != nil {
-		if sErr := store.SetStatus(ctx, logID, domain.LogStatusFailed); sErr != nil {
-			log.Error("set status failed after parse error", "log_id", logID, "error", sErr)
-		}
-		fmt.Fprintf(os.Stderr, "parse failed: %v\n", err)
-		os.Exit(1)
+	case <-ctx.Done():
+		log.Info("shutdown signal")
 	}
 
-	if err := store.SaveResult(ctx, logID, res); err != nil {
-		if sErr := store.SetStatus(ctx, logID, domain.LogStatusFailed); sErr != nil {
-			log.Error("set status failed after save error", "log_id", logID, "error", sErr)
-		}
-		fmt.Fprintf(os.Stderr, "save to db: %v\n", err)
-		os.Exit(1)
+	if err := srv.Shutdown(); err != nil {
+		return errors.Join(runErr, fmt.Errorf("shutdown: %w", err))
 	}
-
-	log.Info("parse and save completed",
-		"log_id", logID,
-		"path", path,
-		"nodes", len(res.Nodes),
-		"ports", len(res.Ports),
-		"switch_infos", len(res.SwitchInfos),
-		"system_infos", len(res.SystemInfos),
-		"sharp_infos", len(res.SharpInfos),
-	)
+	return runErr
 }

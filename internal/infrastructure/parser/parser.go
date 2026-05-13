@@ -27,6 +27,10 @@ func New(log *slog.Logger) *Parser {
 	}
 }
 
+func (p *Parser) ResolveArchive(rel string) (string, error) {
+	return p.archives.ResolveRelative(rel)
+}
+
 func (p *Parser) Parse(archivePath string) (application.ParseResult, error) {
 	var zero application.ParseResult
 

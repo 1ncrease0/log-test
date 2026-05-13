@@ -2,12 +2,15 @@ package parser
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"log-parser/internal/application"
 )
 
 type ArchiveReader struct {
@@ -50,6 +53,22 @@ func (z *ArchiveReader) ReadAll(archivePath string) (map[string][]byte, error) {
 	return result, nil
 }
 
+func (z *ArchiveReader) ResolveRelative(rel string) (string, error) {
+	rel = filepath.Clean(strings.TrimSpace(rel))
+	if rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("%w: path escapes data directory", application.ErrInvalidPath)
+	}
+	full := filepath.Join("data", rel)
+	absArchive, err := filepath.Abs(full)
+	if err != nil {
+		return "", fmt.Errorf("resolve archive path: %w", err)
+	}
+	if err := z.validatePath(absArchive); err != nil {
+		return "", err
+	}
+	return absArchive, nil
+}
+
 func (z *ArchiveReader) readZipEntry(f *zip.File) ([]byte, error) {
 	rc, err := f.Open()
 	if err != nil {
@@ -70,32 +89,35 @@ func (z *ArchiveReader) readZipEntry(f *zip.File) ([]byte, error) {
 
 func (z *ArchiveReader) validatePath(archivePath string) error {
 	if !strings.EqualFold(filepath.Ext(archivePath), ".zip") {
-		return fmt.Errorf("only .zip archives are supported: %s", archivePath)
+		return fmt.Errorf("%w: only .zip archives are supported: %s", application.ErrInvalidPath, archivePath)
 	}
 
 	absArchive, err := filepath.Abs(archivePath)
 	if err != nil {
-		return fmt.Errorf("resolve archive path: %w", err)
+		return fmt.Errorf("%w: resolve archive path: %w", application.ErrInvalidPath, err)
 	}
 	absData, err := filepath.Abs("data")
 	if err != nil {
-		return fmt.Errorf("resolve data directory: %w", err)
+		return fmt.Errorf("%w: resolve data directory: %w", application.ErrInvalidPath, err)
 	}
 
 	rel, err := filepath.Rel(absData, absArchive)
 	if err != nil {
-		return fmt.Errorf("archive must be inside data directory: %w", err)
+		return fmt.Errorf("%w: archive must be inside data directory: %w", application.ErrInvalidPath, err)
 	}
 	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return fmt.Errorf("archive path must be inside data directory: %s", archivePath)
+		return fmt.Errorf("%w: archive path must be inside data directory: %s", application.ErrInvalidPath, archivePath)
 	}
 
 	info, err := os.Stat(absArchive)
 	if err != nil {
-		return fmt.Errorf("stat archive: %w", err)
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("%w: stat archive: %w", application.ErrArchiveNotFound, err)
+		}
+		return fmt.Errorf("%w: stat archive: %w", application.ErrInvalidPath, err)
 	}
 	if info.IsDir() {
-		return fmt.Errorf("path is a directory, expected .zip file: %s", archivePath)
+		return fmt.Errorf("%w: path is a directory, expected .zip file: %s", application.ErrInvalidPath, archivePath)
 	}
 
 	return nil

@@ -2,12 +2,8 @@ package application
 
 import (
 	"context"
-	"errors"
-
 	"log-parser/internal/domain"
 )
-
-var ErrDuplicateLogPath = errors.New("log path already exists")
 
 type ParseResult struct {
 	Nodes       []domain.Node
@@ -24,7 +20,26 @@ type NodeDetail struct {
 	SharpInfo  *domain.NodeSharpInfo
 }
 
+type TopologyGroup struct {
+	NodeType int
+	NodeIDs  []int64
+}
+
+type Topology struct {
+	Nodes  []domain.Node
+	Groups []TopologyGroup
+}
+
+type Service interface {
+	ProcessArchive(ctx context.Context, rel string) (int64, error)
+	Topology(ctx context.Context, logID int64) (Topology, error)
+	NodeDetail(ctx context.Context, nodeID int64) (NodeDetail, error)
+	Ports(ctx context.Context, nodeID int64) ([]domain.Port, error)
+	LogMeta(ctx context.Context, logID int64) (domain.Log, error)
+}
+
 type Parser interface {
+	ResolveArchive(rel string) (string, error)
 	Parse(archivePath string) (ParseResult, error)
 }
 

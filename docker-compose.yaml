@@ -25,9 +25,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    ports:
+      - "8080:8080"
     environment:
-      DB_URL: postgres://postgres:password@postgres:5432/logparser?sslmode=disable
+      DATABASE_URL: postgres://postgres:password@postgres:5432/logparser?sslmode=disable
       LOG_LEVEL: DEBUG
+      PORT: "8080"
     volumes:
       - ./data:/app/data:ro
     working_dir: /app

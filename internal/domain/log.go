@@ -5,10 +5,9 @@ import "time"
 type LogStatus string
 
 const (
-	LogStatusPending    LogStatus = "pending"
-	LogStatusProcessing LogStatus = "processing"
-	LogStatusDone       LogStatus = "done"
-	LogStatusFailed     LogStatus = "failed"
+	LogStatusPending LogStatus = "pending"
+	LogStatusDone    LogStatus = "done"
+	LogStatusFailed  LogStatus = "failed"
 )
 
 type Log struct {
