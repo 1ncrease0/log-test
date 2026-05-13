@@ -6,13 +6,13 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: logparser
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-logparser}
     volumes:
       - postgres:/var/lib/postgresql
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "logparser"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-postgres}", "-d", "${POSTGRES_DB:-logparser}"]
       interval: 10s
       retries: 5
       start_period: 30s
@@ -26,10 +26,13 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/logparser?sslmode=disable
-      LOG_LEVEL: DEBUG
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:password@postgres:5432/logparser?sslmode=disable}
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
       PORT: "8080"
     volumes:
       - ./data:/app/data:ro
