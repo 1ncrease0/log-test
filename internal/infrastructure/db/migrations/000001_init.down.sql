@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS nodes_sharp_info;
+DROP TABLE IF EXISTS nodes_system_info;
+DROP TABLE IF EXISTS nodes_switch_info;
+DROP TABLE IF EXISTS ports;
+DROP TABLE IF EXISTS nodes;
+DROP TABLE IF EXISTS logs;

@@ -61,6 +61,7 @@ func parseNodeRow(row []string, idx map[string]int) (domain.Node, error) {
 	r.readInt(&n.BaseVersion, "BaseVersion")
 	r.readString(&n.SystemImageGUID, "SystemImageGUID")
 	r.readString(&n.PortGUID, "PortGUID")
+	n.NodeGUID = normCSVNodeGUID(n.NodeGUID)
 	return n, r.err
 }
 
@@ -121,6 +122,7 @@ func parsePortRow(row []string, idx map[string]int) (domain.Port, error) {
 	r.readIntOpt(&p.CapMsk2, "CapMsk2")
 	r.readIntOpt(&p.FECActv, "FECActv")
 	r.readIntOpt(&p.RetransActv, "RetransActv")
+	p.NodeGUID = normCSVNodeGUID(p.NodeGUID)
 	return p, r.err
 }
 
@@ -146,6 +148,7 @@ func parseSwitchRow(row []string, idx map[string]int) (domain.NodeSwitchInfo, er
 	r.readInt(&s.FilterRawOutbCap, "FilterRawOutbCap")
 	r.readInt(&s.ENP0, "ENP0")
 	r.readInt(&s.MCastFDBTop, "MCastFDBTop")
+	s.NodeGUID = normCSVNodeGUID(s.NodeGUID)
 	return s, r.err
 }
 
@@ -157,6 +160,7 @@ func parseSystemInfoRow(row []string, idx map[string]int) (domain.NodeSystemInfo
 	r.readString(&s.PartNumber, "PartNumber")
 	r.readString(&s.Revision, "Revision")
 	r.readString(&s.ProductName, "ProductName")
+	s.NodeGUID = normCSVNodeGUID(s.NodeGUID)
 	return s, r.err
 }
 
@@ -223,4 +227,16 @@ func colIdx(header []string) map[string]int {
 		idx[strings.TrimSpace(h)] = i
 	}
 	return idx
+}
+
+func normCSVNodeGUID(s string) string {
+	return strings.TrimSpace(strings.ToLower(s))
+}
+
+func normSharpNodeGUID(s string) string {
+	g := strings.TrimSpace(strings.ToLower(s))
+	if g != "" && !strings.HasPrefix(g, "0x") {
+		g = "0x" + g
+	}
+	return g
 }

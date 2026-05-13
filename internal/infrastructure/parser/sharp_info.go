@@ -28,7 +28,7 @@ func parseSharpInfo(data []byte) ([]domain.NodeSharpInfo, error) {
 				result = append(result, *current)
 			}
 			guid := strings.TrimPrefix(line, "SW_GUID=")
-			current = &domain.NodeSharpInfo{NodeGUID: strings.TrimSpace(guid)}
+			current = &domain.NodeSharpInfo{NodeGUID: normSharpNodeGUID(guid)}
 			continue
 		}
 

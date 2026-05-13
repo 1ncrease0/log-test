@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: logparser
+    volumes:
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "logparser"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  app:
+    build: .
+    container_name: log-parser
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: postgres://postgres:password@postgres:5432/logparser?sslmode=disable
+      LOG_LEVEL: DEBUG
+    volumes:
+      - ./data:/app/data:ro
+    working_dir: /app
+
+volumes:
+  postgres:
