@@ -9,6 +9,8 @@ import (
 
 var errOptionalNA = errors.New("optional column value is N/A")
 
+const csvOptionalNA = "N/A"
+
 type rowParser struct {
 	row []string
 	idx map[string]int
@@ -89,7 +91,7 @@ func optIntCol(row []string, idx map[string]int, col string) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
-	if s == "N/A" {
+	if s == csvOptionalNA {
 		return nil, errOptionalNA
 	}
 	n, err := strconv.Atoi(s)

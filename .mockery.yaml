@@ -1,0 +1,16 @@
+with-expecter: true
+disable-version-string: true
+resolve-type-alias: false
+issue-845-fix: true
+outpkg: mocks
+filename: "{{.InterfaceName | snakecase}}.go"
+
+packages:
+  log-parser/internal/application:
+    config:
+      dir: internal/mocks
+      mockname: "Mock{{.InterfaceName}}"
+    interfaces:
+      Store: {}
+      Parser: {}
+      Service: {}
