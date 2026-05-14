@@ -45,6 +45,7 @@ type Parser interface {
 
 type Store interface {
 	CreateLog(ctx context.Context, path string) (int64, error)
+	LogByPath(ctx context.Context, path string) (domain.Log, error)
 	SaveResult(ctx context.Context, logID int64, result ParseResult) error
 	SetStatus(ctx context.Context, logID int64, status domain.LogStatus) error
 

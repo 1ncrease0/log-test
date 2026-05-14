@@ -59,11 +59,40 @@ func TestService_ProcessArchive_DuplicatePath(t *testing.T) {
 	pr := mocks.NewMockParser(t)
 	pr.EXPECT().ResolveArchive("logs/a.zip").Return("/abs/a.zip", nil)
 	st.EXPECT().CreateLog(mock.Anything, "/abs/a.zip").Return(int64(0), application.ErrDuplicateLogPath)
+	st.EXPECT().LogByPath(mock.Anything, "/abs/a.zip").Return(domain.Log{
+		ID:     7,
+		Path:   "/abs/a.zip",
+		Status: domain.LogStatusDone,
+	}, nil)
 
 	svc := application.NewService(testLogger(), st, pr)
 	_, err := svc.ProcessArchive(context.Background(), "logs/a.zip")
 	require.Error(t, err)
 	require.ErrorIs(t, err, application.ErrDuplicateLogPath)
+}
+
+func TestService_ProcessArchive_RetryAfterFailed(t *testing.T) {
+	t.Parallel()
+
+	st := mocks.NewMockStore(t)
+	pr := mocks.NewMockParser(t)
+	pr.EXPECT().ResolveArchive("logs/a.zip").Return("/abs/a.zip", nil)
+	st.EXPECT().CreateLog(mock.Anything, "/abs/a.zip").Return(int64(0), application.ErrDuplicateLogPath)
+	st.EXPECT().LogByPath(mock.Anything, "/abs/a.zip").Return(domain.Log{
+		ID:     7,
+		Path:   "/abs/a.zip",
+		Status: domain.LogStatusFailed,
+	}, nil)
+	st.EXPECT().SetStatus(mock.Anything, int64(7), domain.LogStatusPending).Return(nil)
+	pr.EXPECT().Parse("/abs/a.zip").Return(application.ParseResult{
+		Nodes: []domain.Node{{NodeGUID: "0x1"}},
+	}, nil)
+	st.EXPECT().SaveResult(mock.Anything, int64(7), mock.Anything).Return(nil)
+
+	svc := application.NewService(testLogger(), st, pr)
+	id, err := svc.ProcessArchive(context.Background(), "logs/a.zip")
+	require.NoError(t, err)
+	require.Equal(t, int64(7), id)
 }
 
 func TestService_ProcessArchive_CreateLogPersistFailed(t *testing.T) {

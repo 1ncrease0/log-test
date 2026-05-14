@@ -29,10 +29,20 @@ func (s *service) ProcessArchive(ctx context.Context, archiveRel string) (int64,
 
 	logID, err := s.store.CreateLog(ctx, path)
 	if err != nil {
-		if errors.Is(err, ErrDuplicateLogPath) {
-			return 0, fmt.Errorf("create log: %w", err)
+		if !errors.Is(err, ErrDuplicateLogPath) {
+			return 0, fmt.Errorf("%w: %w", ErrPersistFailed, err)
 		}
-		return 0, fmt.Errorf("%w: %w", ErrPersistFailed, err)
+		existing, errByPath := s.store.LogByPath(ctx, path)
+		if errByPath != nil {
+			return 0, fmt.Errorf("%w: %w", ErrPersistFailed, errByPath)
+		}
+		if existing.Status != domain.LogStatusFailed {
+			return 0, fmt.Errorf("%w", ErrDuplicateLogPath)
+		}
+		logID = existing.ID
+		if setErr := s.store.SetStatus(ctx, logID, domain.LogStatusPending); setErr != nil {
+			return 0, fmt.Errorf("%w: %w", ErrPersistFailed, setErr)
+		}
 	}
 
 	parseStart := time.Now()

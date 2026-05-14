@@ -51,6 +51,17 @@ func (db *DB) CreateLog(ctx context.Context, path string) (int64, error) {
 	return id, nil
 }
 
+func (db *DB) LogByPath(ctx context.Context, path string) (domain.Log, error) {
+	var row logRow
+	if err := db.conn.GetContext(ctx, &row, `SELECT * FROM logs WHERE path = $1`, path); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Log{}, application.ErrNotFound
+		}
+		return domain.Log{}, fmt.Errorf("log by path: %w", err)
+	}
+	return row.toDomain(), nil
+}
+
 func (db *DB) SetStatus(ctx context.Context, logID int64, status domain.LogStatus) error {
 	const q = `UPDATE logs SET status = $1 WHERE id = $2`
 	if _, err := db.conn.ExecContext(ctx, q, string(status), logID); err != nil {
