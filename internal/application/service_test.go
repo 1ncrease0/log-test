@@ -27,10 +27,10 @@ func TestService_ProcessArchive_Success(t *testing.T) {
 
 	pr.EXPECT().ResolveArchive("logs/a.zip").Return("/abs/data/logs/a.zip", nil)
 	st.EXPECT().CreateLog(mock.Anything, "/abs/data/logs/a.zip").Return(int64(10), nil)
-	pr.EXPECT().Parse("/abs/data/logs/a.zip").Return(application.ParseResult{
+	pr.EXPECT().Parse("/abs/data/logs/a.zip").Return(domain.ParseResult{
 		Nodes: []domain.Node{{ID: 1, NodeGUID: "0x1"}},
 	}, nil)
-	st.EXPECT().SaveResult(mock.Anything, int64(10), mock.MatchedBy(func(r application.ParseResult) bool {
+	st.EXPECT().SaveResult(mock.Anything, int64(10), mock.MatchedBy(func(r domain.ParseResult) bool {
 		return len(r.Nodes) == 1 && r.Nodes[0].NodeGUID == "0x1"
 	})).Return(nil)
 
@@ -84,7 +84,7 @@ func TestService_ProcessArchive_RetryAfterFailed(t *testing.T) {
 		Status: domain.LogStatusFailed,
 	}, nil)
 	st.EXPECT().SetStatus(mock.Anything, int64(7), domain.LogStatusPending).Return(nil)
-	pr.EXPECT().Parse("/abs/a.zip").Return(application.ParseResult{
+	pr.EXPECT().Parse("/abs/a.zip").Return(domain.ParseResult{
 		Nodes: []domain.Node{{NodeGUID: "0x1"}},
 	}, nil)
 	st.EXPECT().SaveResult(mock.Anything, int64(7), mock.Anything).Return(nil)
@@ -116,7 +116,7 @@ func TestService_ProcessArchive_ParseFailsSetsFailed(t *testing.T) {
 	pr := mocks.NewMockParser(t)
 	pr.EXPECT().ResolveArchive("logs/a.zip").Return("/abs/a.zip", nil)
 	st.EXPECT().CreateLog(mock.Anything, "/abs/a.zip").Return(int64(5), nil)
-	pr.EXPECT().Parse("/abs/a.zip").Return(application.ParseResult{}, errors.New("parse boom"))
+	pr.EXPECT().Parse("/abs/a.zip").Return(domain.ParseResult{}, errors.New("parse boom"))
 	st.EXPECT().SetStatus(mock.Anything, int64(5), domain.LogStatusFailed).Return(nil)
 
 	svc := application.NewService(testLogger(), st, pr)
@@ -132,7 +132,7 @@ func TestService_ProcessArchive_SaveFailsSetsFailed(t *testing.T) {
 	pr := mocks.NewMockParser(t)
 	pr.EXPECT().ResolveArchive("logs/a.zip").Return("/abs/a.zip", nil)
 	st.EXPECT().CreateLog(mock.Anything, "/abs/a.zip").Return(int64(5), nil)
-	pr.EXPECT().Parse("/abs/a.zip").Return(application.ParseResult{Nodes: []domain.Node{{}}}, nil)
+	pr.EXPECT().Parse("/abs/a.zip").Return(domain.ParseResult{Nodes: []domain.Node{{}}}, nil)
 	st.EXPECT().SaveResult(mock.Anything, int64(5), mock.Anything).Return(errors.New("save boom"))
 	st.EXPECT().SetStatus(mock.Anything, int64(5), domain.LogStatusFailed).Return(nil)
 

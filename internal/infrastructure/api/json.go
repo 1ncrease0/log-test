@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"log-parser/internal/application"
 	"log-parser/internal/domain"
 )
 
@@ -94,7 +93,7 @@ type topologyJSON struct {
 	Groups []topologyGroupJSON `json:"groups"`
 }
 
-func topologyToJSON(t application.Topology) topologyJSON {
+func topologyToJSON(t domain.Topology) topologyJSON {
 	out := topologyJSON{
 		Nodes:  make([]nodeJSON, len(t.Nodes)),
 		Groups: make([]topologyGroupJSON, len(t.Groups)),
@@ -192,7 +191,7 @@ type nodeDetailJSON struct {
 	SharpInfo  *sharpInfoJSON  `json:"sharp_info,omitempty"`
 }
 
-func nodeDetailToJSON(d application.NodeDetail) nodeDetailJSON {
+func nodeDetailToJSON(d domain.NodeDetail) nodeDetailJSON {
 	out := nodeDetailJSON{nodeJSON: nodeToJSON(d.Node)}
 	if d.SwitchInfo != nil {
 		v := switchInfoToJSON(*d.SwitchInfo)

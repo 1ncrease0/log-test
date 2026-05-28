@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	application "log-parser/internal/application"
+	domain "log-parser/internal/domain"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -22,22 +22,22 @@ func (_m *MockParser) EXPECT() *MockParser_Expecter {
 }
 
 // Parse provides a mock function with given fields: archivePath
-func (_m *MockParser) Parse(archivePath string) (application.ParseResult, error) {
+func (_m *MockParser) Parse(archivePath string) (domain.ParseResult, error) {
 	ret := _m.Called(archivePath)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Parse")
 	}
 
-	var r0 application.ParseResult
+	var r0 domain.ParseResult
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (application.ParseResult, error)); ok {
+	if rf, ok := ret.Get(0).(func(string) (domain.ParseResult, error)); ok {
 		return rf(archivePath)
 	}
-	if rf, ok := ret.Get(0).(func(string) application.ParseResult); ok {
+	if rf, ok := ret.Get(0).(func(string) domain.ParseResult); ok {
 		r0 = rf(archivePath)
 	} else {
-		r0 = ret.Get(0).(application.ParseResult)
+		r0 = ret.Get(0).(domain.ParseResult)
 	}
 
 	if rf, ok := ret.Get(1).(func(string) error); ok {
@@ -67,12 +67,12 @@ func (_c *MockParser_Parse_Call) Run(run func(archivePath string)) *MockParser_P
 	return _c
 }
 
-func (_c *MockParser_Parse_Call) Return(_a0 application.ParseResult, _a1 error) *MockParser_Parse_Call {
+func (_c *MockParser_Parse_Call) Return(_a0 domain.ParseResult, _a1 error) *MockParser_Parse_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockParser_Parse_Call) RunAndReturn(run func(string) (application.ParseResult, error)) *MockParser_Parse_Call {
+func (_c *MockParser_Parse_Call) RunAndReturn(run func(string) (domain.ParseResult, error)) *MockParser_Parse_Call {
 	_c.Call.Return(run)
 	return _c
 }

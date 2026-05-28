@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"log-parser/internal/application"
+	"log-parser/internal/domain"
 )
 
 const (
@@ -31,8 +31,8 @@ func (p *Parser) ResolveArchive(rel string) (string, error) {
 	return p.archives.ResolveRelative(rel)
 }
 
-func (p *Parser) Parse(archivePath string) (application.ParseResult, error) {
-	var zero application.ParseResult
+func (p *Parser) Parse(archivePath string) (domain.ParseResult, error) {
+	var zero domain.ParseResult
 
 	files, err := p.archives.ReadAll(archivePath)
 	if err != nil {
@@ -74,7 +74,7 @@ func (p *Parser) Parse(archivePath string) (application.ParseResult, error) {
 		"sharp_infos", len(sharpInfos),
 	)
 
-	return application.ParseResult{
+	return domain.ParseResult{
 		Nodes:       csv.nodes,
 		Ports:       csv.ports,
 		SwitchInfos: csv.switchInfos,

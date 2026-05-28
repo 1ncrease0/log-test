@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"log-parser/internal/application"
+	"log-parser/internal/domain"
 )
 
 func diagnosticPortRow(nodeGUID, portGUID string, portNum int, capMsk int64) []string {
@@ -104,7 +104,7 @@ func writeDiagnosticZip(t *testing.T, zipPath string, members map[string][]byte)
 	require.NoError(t, f.Close())
 }
 
-func parseDiagnosticZipInTemp(t *testing.T, archiveFileName string, members map[string][]byte) (application.ParseResult, error) {
+func parseDiagnosticZipInTemp(t *testing.T, archiveFileName string, members map[string][]byte) (domain.ParseResult, error) {
 	t.Helper()
 	tmp := t.TempDir()
 	require.NoError(t, os.MkdirAll(filepath.Join(tmp, "data"), 0o755))
@@ -114,7 +114,7 @@ func parseDiagnosticZipInTemp(t *testing.T, archiveFileName string, members map[
 	p := New(slog.New(slog.NewTextHandler(io.Discard, nil)))
 	abs, err := p.ResolveArchive(archiveFileName)
 	if err != nil {
-		var zero application.ParseResult
+		var zero domain.ParseResult
 		return zero, err
 	}
 	return p.Parse(abs)

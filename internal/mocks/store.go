@@ -4,7 +4,6 @@ package mocks
 
 import (
 	context "context"
-	application "log-parser/internal/application"
 	domain "log-parser/internal/domain"
 
 	mock "github.com/stretchr/testify/mock"
@@ -252,22 +251,22 @@ func (_c *MockStore_Node_Call) RunAndReturn(run func(context.Context, int64) (do
 }
 
 // NodeDetail provides a mock function with given fields: ctx, nodeID
-func (_m *MockStore) NodeDetail(ctx context.Context, nodeID int64) (application.NodeDetail, error) {
+func (_m *MockStore) NodeDetail(ctx context.Context, nodeID int64) (domain.NodeDetail, error) {
 	ret := _m.Called(ctx, nodeID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for NodeDetail")
 	}
 
-	var r0 application.NodeDetail
+	var r0 domain.NodeDetail
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (application.NodeDetail, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (domain.NodeDetail, error)); ok {
 		return rf(ctx, nodeID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) application.NodeDetail); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) domain.NodeDetail); ok {
 		r0 = rf(ctx, nodeID)
 	} else {
-		r0 = ret.Get(0).(application.NodeDetail)
+		r0 = ret.Get(0).(domain.NodeDetail)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
@@ -298,12 +297,12 @@ func (_c *MockStore_NodeDetail_Call) Run(run func(ctx context.Context, nodeID in
 	return _c
 }
 
-func (_c *MockStore_NodeDetail_Call) Return(_a0 application.NodeDetail, _a1 error) *MockStore_NodeDetail_Call {
+func (_c *MockStore_NodeDetail_Call) Return(_a0 domain.NodeDetail, _a1 error) *MockStore_NodeDetail_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockStore_NodeDetail_Call) RunAndReturn(run func(context.Context, int64) (application.NodeDetail, error)) *MockStore_NodeDetail_Call {
+func (_c *MockStore_NodeDetail_Call) RunAndReturn(run func(context.Context, int64) (domain.NodeDetail, error)) *MockStore_NodeDetail_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -427,7 +426,7 @@ func (_c *MockStore_Ports_Call) RunAndReturn(run func(context.Context, int64) ([
 }
 
 // SaveResult provides a mock function with given fields: ctx, logID, result
-func (_m *MockStore) SaveResult(ctx context.Context, logID int64, result application.ParseResult) error {
+func (_m *MockStore) SaveResult(ctx context.Context, logID int64, result domain.ParseResult) error {
 	ret := _m.Called(ctx, logID, result)
 
 	if len(ret) == 0 {
@@ -435,7 +434,7 @@ func (_m *MockStore) SaveResult(ctx context.Context, logID int64, result applica
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, application.ParseResult) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64, domain.ParseResult) error); ok {
 		r0 = rf(ctx, logID, result)
 	} else {
 		r0 = ret.Error(0)
@@ -452,14 +451,14 @@ type MockStore_SaveResult_Call struct {
 // SaveResult is a helper method to define mock.On call
 //   - ctx context.Context
 //   - logID int64
-//   - result application.ParseResult
+//   - result domain.ParseResult
 func (_e *MockStore_Expecter) SaveResult(ctx interface{}, logID interface{}, result interface{}) *MockStore_SaveResult_Call {
 	return &MockStore_SaveResult_Call{Call: _e.mock.On("SaveResult", ctx, logID, result)}
 }
 
-func (_c *MockStore_SaveResult_Call) Run(run func(ctx context.Context, logID int64, result application.ParseResult)) *MockStore_SaveResult_Call {
+func (_c *MockStore_SaveResult_Call) Run(run func(ctx context.Context, logID int64, result domain.ParseResult)) *MockStore_SaveResult_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int64), args[2].(application.ParseResult))
+		run(args[0].(context.Context), args[1].(int64), args[2].(domain.ParseResult))
 	})
 	return _c
 }
@@ -469,7 +468,7 @@ func (_c *MockStore_SaveResult_Call) Return(_a0 error) *MockStore_SaveResult_Cal
 	return _c
 }
 
-func (_c *MockStore_SaveResult_Call) RunAndReturn(run func(context.Context, int64, application.ParseResult) error) *MockStore_SaveResult_Call {
+func (_c *MockStore_SaveResult_Call) RunAndReturn(run func(context.Context, int64, domain.ParseResult) error) *MockStore_SaveResult_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -4,7 +4,6 @@ package mocks
 
 import (
 	context "context"
-	application "log-parser/internal/application"
 	domain "log-parser/internal/domain"
 
 	mock "github.com/stretchr/testify/mock"
@@ -81,22 +80,22 @@ func (_c *MockService_LogMeta_Call) RunAndReturn(run func(context.Context, int64
 }
 
 // NodeDetail provides a mock function with given fields: ctx, nodeID
-func (_m *MockService) NodeDetail(ctx context.Context, nodeID int64) (application.NodeDetail, error) {
+func (_m *MockService) NodeDetail(ctx context.Context, nodeID int64) (domain.NodeDetail, error) {
 	ret := _m.Called(ctx, nodeID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for NodeDetail")
 	}
 
-	var r0 application.NodeDetail
+	var r0 domain.NodeDetail
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (application.NodeDetail, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (domain.NodeDetail, error)); ok {
 		return rf(ctx, nodeID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) application.NodeDetail); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) domain.NodeDetail); ok {
 		r0 = rf(ctx, nodeID)
 	} else {
-		r0 = ret.Get(0).(application.NodeDetail)
+		r0 = ret.Get(0).(domain.NodeDetail)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
@@ -127,12 +126,12 @@ func (_c *MockService_NodeDetail_Call) Run(run func(ctx context.Context, nodeID 
 	return _c
 }
 
-func (_c *MockService_NodeDetail_Call) Return(_a0 application.NodeDetail, _a1 error) *MockService_NodeDetail_Call {
+func (_c *MockService_NodeDetail_Call) Return(_a0 domain.NodeDetail, _a1 error) *MockService_NodeDetail_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockService_NodeDetail_Call) RunAndReturn(run func(context.Context, int64) (application.NodeDetail, error)) *MockService_NodeDetail_Call {
+func (_c *MockService_NodeDetail_Call) RunAndReturn(run func(context.Context, int64) (domain.NodeDetail, error)) *MockService_NodeDetail_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -254,22 +253,22 @@ func (_c *MockService_ProcessArchive_Call) RunAndReturn(run func(context.Context
 }
 
 // Topology provides a mock function with given fields: ctx, logID
-func (_m *MockService) Topology(ctx context.Context, logID int64) (application.Topology, error) {
+func (_m *MockService) Topology(ctx context.Context, logID int64) (domain.Topology, error) {
 	ret := _m.Called(ctx, logID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Topology")
 	}
 
-	var r0 application.Topology
+	var r0 domain.Topology
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (application.Topology, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (domain.Topology, error)); ok {
 		return rf(ctx, logID)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) application.Topology); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int64) domain.Topology); ok {
 		r0 = rf(ctx, logID)
 	} else {
-		r0 = ret.Get(0).(application.Topology)
+		r0 = ret.Get(0).(domain.Topology)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
@@ -300,12 +299,12 @@ func (_c *MockService_Topology_Call) Run(run func(ctx context.Context, logID int
 	return _c
 }
 
-func (_c *MockService_Topology_Call) Return(_a0 application.Topology, _a1 error) *MockService_Topology_Call {
+func (_c *MockService_Topology_Call) Return(_a0 domain.Topology, _a1 error) *MockService_Topology_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockService_Topology_Call) RunAndReturn(run func(context.Context, int64) (application.Topology, error)) *MockService_Topology_Call {
+func (_c *MockService_Topology_Call) RunAndReturn(run func(context.Context, int64) (domain.Topology, error)) *MockService_Topology_Call {
 	_c.Call.Return(run)
 	return _c
 }

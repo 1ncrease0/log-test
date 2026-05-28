@@ -113,9 +113,9 @@ func TestHandlers_topology(t *testing.T) {
 	t.Parallel()
 
 	svc := mocks.NewMockService(t)
-	svc.EXPECT().Topology(mock.Anything, int64(1)).Return(application.Topology{
+	svc.EXPECT().Topology(mock.Anything, int64(1)).Return(domain.Topology{
 		Nodes: []domain.Node{{ID: 1, LogID: 1, NodeType: 1}},
-		Groups: []application.TopologyGroup{
+		Groups: []domain.TopologyGroup{
 			{NodeType: 1, NodeIDs: []int64{1}},
 		},
 	}, nil)
@@ -131,7 +131,7 @@ func TestHandlers_topology_conflict(t *testing.T) {
 	t.Parallel()
 
 	svc := mocks.NewMockService(t)
-	svc.EXPECT().Topology(mock.Anything, int64(2)).Return(application.Topology{}, application.ErrTopologyNotReady)
+	svc.EXPECT().Topology(mock.Anything, int64(2)).Return(domain.Topology{}, application.ErrTopologyNotReady)
 
 	h := Routes(discardLogger(), svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/topology/2", nil)
@@ -155,7 +155,7 @@ func TestHandlers_node_notFound(t *testing.T) {
 	t.Parallel()
 
 	svc := mocks.NewMockService(t)
-	svc.EXPECT().NodeDetail(mock.Anything, int64(9)).Return(application.NodeDetail{}, application.ErrNotFound)
+	svc.EXPECT().NodeDetail(mock.Anything, int64(9)).Return(domain.NodeDetail{}, application.ErrNotFound)
 
 	h := Routes(discardLogger(), svc)
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/node/9", nil)

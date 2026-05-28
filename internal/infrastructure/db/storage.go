@@ -70,7 +70,7 @@ func (db *DB) SetStatus(ctx context.Context, logID int64, status domain.LogStatu
 	return nil
 }
 
-func (db *DB) SaveResult(ctx context.Context, logID int64, result application.ParseResult) error {
+func (db *DB) SaveResult(ctx context.Context, logID int64, result domain.ParseResult) error {
 	tx, err := db.conn.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
@@ -144,18 +144,18 @@ func (db *DB) Node(ctx context.Context, nodeID int64) (domain.Node, error) {
 	return row.toDomain(), nil
 }
 
-func (db *DB) NodeDetail(ctx context.Context, nodeID int64) (application.NodeDetail, error) {
+func (db *DB) NodeDetail(ctx context.Context, nodeID int64) (domain.NodeDetail, error) {
 	node, err := db.Node(ctx, nodeID)
 	if err != nil {
-		return application.NodeDetail{}, err
+		return domain.NodeDetail{}, err
 	}
 
-	detail := application.NodeDetail{Node: node}
+	detail := domain.NodeDetail{Node: node}
 
 	var sw nodeSwitchInfoRow
 	if swErr := db.conn.GetContext(ctx, &sw, `SELECT * FROM nodes_switch_info WHERE node_id = $1`, nodeID); swErr != nil {
 		if !errors.Is(swErr, sql.ErrNoRows) {
-			return application.NodeDetail{}, fmt.Errorf("nodes_switch_info node_id=%d: %w", nodeID, swErr)
+			return domain.NodeDetail{}, fmt.Errorf("nodes_switch_info node_id=%d: %w", nodeID, swErr)
 		}
 	} else {
 		v := sw.toDomain()
@@ -165,7 +165,7 @@ func (db *DB) NodeDetail(ctx context.Context, nodeID int64) (application.NodeDet
 	var sys nodeSystemInfoRow
 	if sysErr := db.conn.GetContext(ctx, &sys, `SELECT * FROM nodes_system_info WHERE node_id = $1`, nodeID); sysErr != nil {
 		if !errors.Is(sysErr, sql.ErrNoRows) {
-			return application.NodeDetail{}, fmt.Errorf("nodes_system_info node_id=%d: %w", nodeID, sysErr)
+			return domain.NodeDetail{}, fmt.Errorf("nodes_system_info node_id=%d: %w", nodeID, sysErr)
 		}
 	} else {
 		v := sys.toDomain()
@@ -175,7 +175,7 @@ func (db *DB) NodeDetail(ctx context.Context, nodeID int64) (application.NodeDet
 	var sharp nodeSharpInfoRow
 	if sharpErr := db.conn.GetContext(ctx, &sharp, `SELECT * FROM nodes_sharp_info WHERE node_id = $1`, nodeID); sharpErr != nil {
 		if !errors.Is(sharpErr, sql.ErrNoRows) {
-			return application.NodeDetail{}, fmt.Errorf("nodes_sharp_info node_id=%d: %w", nodeID, sharpErr)
+			return domain.NodeDetail{}, fmt.Errorf("nodes_sharp_info node_id=%d: %w", nodeID, sharpErr)
 		}
 	} else {
 		v := sharp.toDomain()

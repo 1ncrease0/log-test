@@ -76,18 +76,18 @@ func (s *service) ProcessArchive(ctx context.Context, archiveRel string) (int64,
 	return logID, nil
 }
 
-func (s *service) Topology(ctx context.Context, logID int64) (Topology, error) {
+func (s *service) Topology(ctx context.Context, logID int64) (domain.Topology, error) {
 	dlog, err := s.store.Log(ctx, logID)
 	if err != nil {
-		return Topology{}, fmt.Errorf("log: %w", err)
+		return domain.Topology{}, fmt.Errorf("log: %w", err)
 	}
 	if dlog.Status != domain.LogStatusDone {
-		return Topology{}, ErrTopologyNotReady
+		return domain.Topology{}, ErrTopologyNotReady
 	}
 
 	nodes, err := s.store.Nodes(ctx, logID)
 	if err != nil {
-		return Topology{}, fmt.Errorf("nodes: %w", err)
+		return domain.Topology{}, fmt.Errorf("nodes: %w", err)
 	}
 
 	buckets := make(map[int][]int64)
@@ -101,23 +101,23 @@ func (s *service) Topology(ctx context.Context, logID int64) (Topology, error) {
 	}
 	sort.Ints(types)
 
-	groups := make([]TopologyGroup, 0, len(types))
+	groups := make([]domain.TopologyGroup, 0, len(types))
 	for _, t := range types {
 		ids := buckets[t]
 		sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
-		groups = append(groups, TopologyGroup{
+		groups = append(groups, domain.TopologyGroup{
 			NodeType: t,
 			NodeIDs:  ids,
 		})
 	}
 
-	return Topology{Nodes: nodes, Groups: groups}, nil
+	return domain.Topology{Nodes: nodes, Groups: groups}, nil
 }
 
-func (s *service) NodeDetail(ctx context.Context, nodeID int64) (NodeDetail, error) {
+func (s *service) NodeDetail(ctx context.Context, nodeID int64) (domain.NodeDetail, error) {
 	d, err := s.store.NodeDetail(ctx, nodeID)
 	if err != nil {
-		return NodeDetail{}, fmt.Errorf("node detail: %w", err)
+		return domain.NodeDetail{}, fmt.Errorf("node detail: %w", err)
 	}
 	return d, nil
 }
